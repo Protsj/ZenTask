@@ -24,5 +24,10 @@ namespace ZenTask.Core.Models
             foreach (var item in Items)
                 item.IsDone = true;
         }
+        public void UndoComplete() 
+        {
+            foreach (var item in Items)
+                item.IsDone = false;
+        }
     }
 }

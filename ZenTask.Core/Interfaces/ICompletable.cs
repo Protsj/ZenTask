@@ -4,5 +4,6 @@
     {
         bool IsCompleted { get; }
         void Complete();
+        void UndoComplete();
     }
 }

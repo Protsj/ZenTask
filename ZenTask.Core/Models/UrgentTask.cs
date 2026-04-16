@@ -13,5 +13,6 @@ namespace ZenTask.Core.Models
             IsCompleted = false;
         }
         public void Complete() { IsCompleted = true; }
+        public void UndoComplete() { IsCompleted = false; }
     }
 }

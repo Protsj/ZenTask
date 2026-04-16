@@ -14,8 +14,25 @@ namespace ZenTask.Core.Models
         }
         public void Complete() 
         {
-            IsCompleted = true;
-            Streak++;
+            if (!IsCompleted)
+            {
+                IsCompleted = true;
+                Streak++;
+            }
+        }
+        public void UndoComplete() 
+        {
+            if (IsCompleted)
+            {
+                IsCompleted = false;
+                Streak = Math.Max(0, Streak - 1);
+            }
+        }
+        public void ResetCycle()
+        {
+            if (!IsCompleted)
+                Streak = 0;
+            IsCompleted = false;
         }
     }
 }

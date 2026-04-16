@@ -20,5 +20,6 @@ namespace ZenTask.Core.Models
             IsReminderSent = false;
         }
         public void Complete() { IsCompleted = true; }
+        public void UndoComplete() { IsCompleted = false; }
     }
 }
