@@ -1,5 +1,13 @@
-﻿namespace ZenTask.Core.Models
+﻿using System.Text.Json.Serialization;
+
+namespace ZenTask.Core.Models
 {
+    [JsonDerivedType(typeof(CallTask), typeDiscriminator: "call")]
+    [JsonDerivedType(typeof(FocusTask), typeDiscriminator: "focus")]
+    [JsonDerivedType(typeof(HabitTask), typeDiscriminator: "habit")]
+    [JsonDerivedType(typeof(ListTask), typeDiscriminator: "list")]
+    [JsonDerivedType(typeof(MeetingTask), typeDiscriminator: "meeting")]
+    [JsonDerivedType(typeof(UrgentTask), typeDiscriminator: "urgent")]
     public abstract class BaseTask //Abstract base class for all tasks, containing common properties and logic
     {
         public Guid Id { get; protected set; }
