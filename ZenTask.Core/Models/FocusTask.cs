@@ -7,10 +7,10 @@ namespace ZenTask.Core.Models
         public TimeSpan EstimatedDuration { get; set; }
         public int PomodoroCount { get; set; }
         public bool IsCompleted { get; private set; }
-        public FocusTask(string title, TimeSpan duration, int pomodoroCount = 1, string description = "") 
+        public FocusTask(string title, TimeSpan estimatedDuration, int pomodoroCount = 1, string description = "") 
             : base(title, description)
         {
-            EstimatedDuration = duration;
+            EstimatedDuration = estimatedDuration;
             PomodoroCount = pomodoroCount;
             IsCompleted = false;
         }
