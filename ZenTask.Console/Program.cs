@@ -31,7 +31,10 @@ while (!exit)
         case "2": ShowTasks(manager); break;
         case "3": CompleteTaskFlow(manager); break;
         case "4": DeleteTaskFlow(manager); break;
-        case "5": exit = true; break;
+        case "5": 
+            await storage.SaveTaskAsync(manager.GetTasks());
+            exit = true; 
+            break;
         default: Console.WriteLine("Invalid choice!\n"); break;
     }
 }
@@ -137,9 +140,9 @@ static void AddListTask(TaskManager manager)
     Console.Write("\nEnter the list task name: ");
     string title = Console.ReadLine();
     var listTask = new ListTask(title);
+    Console.Write("Add an item to the list (or leave empty to finish): ");
     while (true)
     {
-        Console.Write("Add an item to the list (or leave empty to finish): ");
         string item = Console.ReadLine();
         if (string.IsNullOrWhiteSpace(item))
             break;

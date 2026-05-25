@@ -5,7 +5,7 @@ namespace ZenTask.Core.Data
 {
     public class SqliteTaskStorage
     {
-        public async Task SaveAsync(IEnumerable<BaseTask> tasks)
+        public async Task SaveTaskAsync(IEnumerable<BaseTask> tasks)
         {
             using var context = new TaskDbContext();
 
