@@ -11,4 +11,10 @@
     <ProjectReference Include="..\ZenTask.Core\ZenTask.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="Tasks.db">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>
