@@ -6,7 +6,7 @@ namespace ZenTask.Core.Models
     {
         public string ContactName { get; set; }
         public string PhoneNumber { get; set; }
-        public string Platform { get; set; } //"Phone", "Zoom", "Teams"
+        public string Platform { get; set; }
         public DateTime ReminderTime { get; set; }
         public bool IsReminderSent { get; set; }
         public bool IsCompleted { get; private set; }

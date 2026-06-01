@@ -1,8 +1,6 @@
-﻿using System.Text.Json.Serialization;
-
-namespace ZenTask.Core.Models
+﻿namespace ZenTask.Core.Models
 {
-    public abstract class BaseTask //Abstract base class for all tasks, containing common properties and logic
+    public abstract class BaseTask
     {
         public Guid Id { get; protected set; }
         public string Title { get; set; }
