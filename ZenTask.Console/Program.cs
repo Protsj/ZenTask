@@ -107,7 +107,7 @@ static void AddCallTask(TaskManager manager)
         Console.WriteLine("Invalid reminder time! Using current time.");
         reminderTime = DateTime.Now;
     }
-    var callTask = new CallTask(title, contactName, reminderTime, phoneNumber, platform);
+    var callTask = new CallTask(title, contactName, phoneNumber, reminderTime, platform);
     manager.AddTask(callTask);
     Console.WriteLine("Call task successfully added!\n");
 }
