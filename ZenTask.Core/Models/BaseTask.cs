@@ -10,7 +10,7 @@ namespace ZenTask.Core.Models
         public DateTime CreatedAt { get; protected set; }
         protected BaseTask(string title, string description = "")
         {
-            if(string.IsNullOrWhiteSpace(title))
+            if (string.IsNullOrWhiteSpace(title))
                 throw new ArgumentException($"Title cannot be empty. {nameof(title)}");
             Id = Guid.NewGuid();
             Title = title;

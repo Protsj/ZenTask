@@ -1,5 +1,4 @@
-﻿using System.Threading.Tasks;
-using ZenTask.Core.Data;
+﻿using ZenTask.Core.Data;
 using ZenTask.Core.Models;
 using ZenTask.Core.Services;
 
@@ -7,10 +6,19 @@ var storage = new SqliteTaskStorage();
 var manager = new TaskManager();
 
 manager.TaskCompletedEvents += ( sender, e) => { Console.WriteLine($"Task completed: {e.Task.Title}"); };
+manager.ReminderTriggeredEvent += ( sender, e) => { 
+    Console.Beep();
+    Console.ForegroundColor = ConsoleColor.Yellow;
+    Console.WriteLine($"\nReminder: {e.Task.Title} is due soon!"); 
+    Console.ResetColor();
+};
+
+manager.StartReminderMonitor();
+
 
 Console.WriteLine("Loading tasks...");
 var loadedTasks = await storage.LoadTasksAsync();
-foreach(var task in loadedTasks)
+foreach (var task in loadedTasks)
     manager.AddTask(task);
 Console.WriteLine($"Loaded tasks: {loadedTasks.Count}\n");
 
@@ -33,6 +41,7 @@ while (!exit)
         case "4": DeleteTaskFlow(manager); break;
         case "5": 
             await storage.SaveTaskAsync(manager.GetTasks());
+            manager.StopReminderMonitor();
             exit = true; 
             break;
         default: Console.WriteLine("Invalid choice!\n"); break;
