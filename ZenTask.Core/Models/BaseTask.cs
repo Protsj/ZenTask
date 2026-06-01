@@ -12,7 +12,7 @@
                 throw new ArgumentException($"Title cannot be empty. {nameof(title)}");
             Id = Guid.NewGuid();
             Title = title;
-            Description = description;
+            Description = string.IsNullOrWhiteSpace(description) ? string.Empty : description;
             CreatedAt = DateTime.UtcNow;
         }
 
