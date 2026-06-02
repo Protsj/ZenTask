@@ -59,7 +59,7 @@ namespace ZenTask.Tests.Services
             // Arrange
             var manager = new TaskManager();
             manager.AddTask(new HabitTask("Habit 1"));
-            manager.AddTask(new CallTask("Call 1", "Ivan", DateTime.Now));
+            manager.AddTask(new CallTask("Call Task", "John Doe", "123-456-7890", DateTime.Now.AddHours(1)));
             manager.AddTask(new HabitTask("Habit 2"));
             // Act
             var habitTasks = manager.GetTasks(t => t is HabitTask);
