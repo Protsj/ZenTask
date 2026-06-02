@@ -5,6 +5,28 @@ namespace ZenTask.Tests.Models
     public class HabitTaskTest
     {
         [Fact]
+        public void HabitTask_Contructor_Should_Set_Title_Correctly()
+        {
+            // Arrange
+            string title = "Test Habit Task";
+            // Act
+            var task = new HabitTask(title);
+            // Assert
+            Assert.Equal(title, task.Title);
+        }
+
+        [Fact]
+        public void HabitTask_Complete_Should_Set_IsCompleted_To_True()
+        {
+            // Arrange
+            var task = new HabitTask("Test Habit Task");
+            // Act
+            task.Complete();
+            // Assert
+            Assert.True(task.IsCompleted);
+        }
+
+        [Fact]
         public void HabitTask_Should_Increase_Streak_On_Complete()
         {
             // Arrange
@@ -13,11 +35,11 @@ namespace ZenTask.Tests.Models
             // Act
             task.Complete();
             // Assert
-            Assert.True(task.IsCompleted);
             Assert.Equal(initialStreak + 1, task.Streak);
         }
+
         [Fact]
-        public void HabitTask_When_Completed_Multiple_Times_Should_Increase_Streak_Each_Time()
+        public void HabitTask_Should_Increase_Streak_Each_Time_When_Completed_Multiple_Times()
         {
             // Arrange
             var task = new HabitTask("Test Habit Task");
@@ -27,9 +49,34 @@ namespace ZenTask.Tests.Models
             task.ResetCycle(); // Reset cycle to allow for next completion
             task.Complete(); // Second completion
             // Assert
-            Assert.True(task.IsCompleted);
             Assert.Equal(initialStreak + 2, task.Streak); // Streak should increase by 2
         }
+
+        [Fact]
+        public void HabitTask_UndoComplete_Should_Set_IsCompleted_To_False()
+        {
+            // Arrange
+            var task = new HabitTask("Test Habit Task");
+            task.Complete(); 
+            // Act
+            task.UndoComplete();
+            // Assert
+            Assert.False(task.IsCompleted);
+        }
+
+        [Fact]
+        public void HabitTask_Should_Decrease_Streak_On_UndoComplete()
+        {
+            // Arrange
+            var task = new HabitTask("Test Habit Task");
+            task.Complete(); // Increase streak
+            int streakAfterComplete = task.Streak;
+            // Act
+            task.UndoComplete();
+            // Assert
+            Assert.Equal(streakAfterComplete - 1, task.Streak); // Streak should decrease by 1
+        }
+
         [Fact]
         public void HabitTask_Should_Reset_Streak_On_ResetCycle()
         {
