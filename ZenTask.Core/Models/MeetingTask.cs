@@ -11,7 +11,7 @@ namespace ZenTask.Core.Models
         public MeetingTask(string title, DateTime reminderTime, string location= "", string description = "") 
             : base(title, description)
         {
-            Location = location;
+            Location = string.IsNullOrWhiteSpace(location) ? string.Empty : location;
             ReminderTime = reminderTime;
             IsCompleted = false;
             IsReminderSent = false;
