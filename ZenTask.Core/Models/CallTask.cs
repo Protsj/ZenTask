@@ -16,7 +16,7 @@ namespace ZenTask.Core.Models
             ContactName = contactName;
             PhoneNumber = phoneNumber;
             ReminderTime = reminderTime;
-            Platform = string.IsNullOrWhiteSpace(description) ? "Phone" :platform;
+            Platform = string.IsNullOrWhiteSpace(platform) ? "Phone" : platform;
             IsReminderSent = false;
             IsCompleted = false;
         }
