@@ -7,6 +7,9 @@ namespace ZenTask.Core.Data
     {
         public async Task SaveTaskAsync(IEnumerable<BaseTask> tasks)
         {
+            if(tasks == null)
+                throw new ArgumentNullException(nameof(tasks), "Tasks collection cannot be null.");
+
             using var context = new TaskDbContext();
 
             foreach (var task in tasks)
