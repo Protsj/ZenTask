@@ -5,6 +5,12 @@ namespace ZenTask.Core.Data
 {
     public class SqliteTaskStorage
     {
+        public SqliteTaskStorage() 
+        {
+            using var context = new TaskDbContext();
+            context.Database.EnsureCreated();
+        }
+
         public async Task SaveTaskAsync(IEnumerable<BaseTask> tasks)
         {
             if(tasks == null)
@@ -26,7 +32,7 @@ namespace ZenTask.Core.Data
         public async Task<List<BaseTask>> LoadTasksAsync()
         {
             using var context = new TaskDbContext();
-            return await context.Tasks.ToListAsync();
+            return await context.Tasks.Include(t => (t as ListTask).Items).ToListAsync();
         }
         public async Task DeleteTaskAsync(Guid id)
         {

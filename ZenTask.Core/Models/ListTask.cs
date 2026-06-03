@@ -7,6 +7,7 @@ namespace ZenTask.Core.Models
         public int Id { get; set; }
         public string Name { get; set; }
         public bool IsDone { get; set; }
+        public Guid ListTaskId { get; set; }
     }
     public class ListTask : BaseTask, ICompletable
     {

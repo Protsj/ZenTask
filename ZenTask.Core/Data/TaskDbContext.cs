@@ -19,7 +19,14 @@ namespace ZenTask.Core.Data
             modelBuilder.Entity<HabitTask>().ToTable("HabitTask");
             modelBuilder.Entity<FocusTask>().ToTable("FocusTask");
             modelBuilder.Entity<ListTask>().ToTable("ListTask");
+            modelBuilder.Entity<CheckListItem>().ToTable("CheckListItem");
             modelBuilder.Entity<CallTask>().ToTable("CallTask");
+
+            modelBuilder.Entity<ListTask>()
+            .HasMany(l => l.Items)
+            .WithOne()
+            .HasForeignKey(item => item.ListTaskId)
+            .OnDelete(DeleteBehavior.Cascade);
         }
 
     }
