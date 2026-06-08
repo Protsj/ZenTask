@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ZenTask.Core\ZenTask.Core.csproj" />
+    <ProjectReference Include="..\ZenTask.WPF\ZenTask.WPF.csproj" />
   </ItemGroup>
 
   <ItemGroup>
