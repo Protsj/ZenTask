@@ -2,6 +2,7 @@
 using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Media;
 using ZenTask.Core.Models;
 
@@ -9,15 +10,21 @@ namespace ZenTask.WPF.UIConfig
 {
     public class UIBuilder
     {
-        public WindowConfig LoadConfig(string filePath)
+        public WindowConfig LoadMainWindowConfig(string path)
         {
-            if (!File.Exists(filePath))
-                GenerateDefaultConfig(filePath);
-            string json = File.ReadAllText(filePath);
+            if (!File.Exists(path)) GenerateDefaultMainWindowConfig(path);
+            string json = File.ReadAllText(path);
             return JsonSerializer.Deserialize<WindowConfig>(json);
         }
 
-        private void GenerateDefaultConfig(string filePath)
+        public WindowConfig LoadAddWindowConfig(string path)
+        {
+            if (!File.Exists(path)) GenerateDefaultAddWindowConfig(path);
+            string json = File.ReadAllText(path);
+            return JsonSerializer.Deserialize<WindowConfig>(json);
+        }
+
+        private void GenerateDefaultMainWindowConfig(string filePath)
         {
             var defaultConfig = new WindowConfig
             {
@@ -125,6 +132,69 @@ namespace ZenTask.WPF.UIConfig
             File.WriteAllText(filePath, jsonString);
         }
 
+        private void GenerateDefaultAddWindowConfig(string path)
+        {
+            var defaultConfig = new WindowConfig
+            {
+                Title = "Select Task Type",
+                Width = 450,
+                Height = 520,
+                Background = "#F3F4F6",
+                RootElement = new ElementConfig
+                {
+                    Type = "StackPanel",
+                    Orientation = "Vertical",
+                    Margin = "20,20,20,20",
+                    Children = new List<ElementConfig>
+                    {
+                        new ElementConfig { Type = "TextBlock", Foreground = "#111827", FontSize = 18, Margin = "0,0,0,20", HorizontalAlignment = "Center" },
+                        
+                        new ElementConfig
+                        {
+                            Type = "UniformGrid",
+                            Height = 380,
+                            Children = new List<ElementConfig>
+                            {
+                                CreateTypeBlock("TileCall", "📞", "Call Task"),
+                                CreateTypeBlock("TileFocus", "⏱️", "Focus Task"),
+                                CreateTypeBlock("TileHabit", "🔁", "Habit Task"),
+                                CreateTypeBlock("TileList", "📋", "List Task"),
+                                CreateTypeBlock("TileMeeting", "👥", "Meeting Task"),
+                                CreateTypeBlock("TileUrgent", "🚨", "Urgent Task")
+                            }
+                        }
+                    }
+                }
+            };
+            var options = new JsonSerializerOptions { WriteIndented = true };
+            File.WriteAllText(path, JsonSerializer.Serialize(defaultConfig, options));
+        }
+
+        private ElementConfig CreateTypeBlock(string name, string icon, string title)
+        {
+            return new ElementConfig
+            {
+                Type = "Border",
+                Name = name,
+                Background = "#FFFFFF",
+                Margin = "8,8,8,8",
+                Children = new List<ElementConfig>
+                {
+                    new ElementConfig
+                    {
+                        Type = "StackPanel",
+                        Orientation = "Vertical",
+                        VerticalAlignment = "Center",
+                        Children = new List<ElementConfig>
+                        {
+                            new ElementConfig { Type = "TextBlock", Content = icon, FontSize = 32, HorizontalAlignment = "Center", Margin = "0,0,0,8" },
+                            new ElementConfig { Type = "TextBlock", Content = title, FontSize = 13, Foreground = "#4B5563", HorizontalAlignment = "Center" }
+                        }
+                    }
+                }
+            };
+        }
+
         public UIElement BuildElement(ElementConfig config)
         {
             FrameworkElement element = null;
@@ -170,7 +240,10 @@ namespace ZenTask.WPF.UIConfig
                         txt.Foreground = (Brush)new BrushConverter().ConvertFromString(config.Foreground);
                     element = txt;
                     break;
-
+                case "TextBox":
+                    var textBox = new TextBox { VerticalContentAlignment = VerticalAlignment.Center, Padding = new Thickness(5), BorderThickness = new Thickness(1), BorderBrush = (Brush)new BrushConverter().ConvertFromString("#E5E7EB") };
+                    element = textBox;
+                    break;
                 case "Button":
                     var btn = new Button { Content = config.Content };
                     if (config.FontSize > 0) btn.FontSize = config.FontSize;
@@ -178,9 +251,6 @@ namespace ZenTask.WPF.UIConfig
                         btn.Background = (Brush)new BrushConverter().ConvertFromString(config.Background);
                     if (!string.IsNullOrEmpty(config.Foreground))
                         btn.Foreground = (Brush)new BrushConverter().ConvertFromString(config.Foreground);
-
-                    if (config.Name == "BtnAddTask")
-                        btn.Click += (s, e) => MessageBox.Show("Create task.");
                     element = btn;
                     break;
                 case "Grid":
@@ -191,6 +261,27 @@ namespace ZenTask.WPF.UIConfig
                     foreach (var child in config.Children)
                         grid.Children.Add(BuildElement(child));
                     element = grid;
+                    break;
+                case "UniformGrid":
+                    var uGrid = new UniformGrid { Columns = 2, Rows = 3 };
+                    foreach (var child in config.Children) uGrid.Children.Add(BuildElement(child));
+                    element = uGrid;
+                    break;
+                case "DatePicker":
+                    var picker = new DatePicker { VerticalContentAlignment = VerticalAlignment.Center };
+                    picker.SelectedDate = DateTime.Today;
+                    element = picker;
+                    break;
+
+                case "ComboBox":
+                    var comboBox = new ComboBox { VerticalContentAlignment = VerticalAlignment.Center };
+                    foreach (var child in config.Children)
+                    {
+                        if (child.Type == "ComboBoxItem")
+                            comboBox.Items.Add(new ComboBoxItem { Content = child.Content, Padding = new Thickness(5) });
+                    }
+                    if (comboBox.Items.Count > 0) comboBox.SelectedIndex = 0;
+                    element = comboBox;
                     break;
             }
 
