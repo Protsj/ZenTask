@@ -12,8 +12,4 @@
     <ProjectReference Include="..\ZenTask.Core\ZenTask.Core.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Models\" />
-  </ItemGroup>
-
 </Project>
