@@ -106,7 +106,7 @@ namespace ZenTask.WPF.UIConfig
                         new ElementConfig
                         {
                             Type = "TextBlock",
-                            Name = "TxtTotalTasks",
+                            Name = "TasksTotal",
                             Content = "0 tasks",
                             Foreground = "#9CA3AF",
                             FontSize = 11,
@@ -115,7 +115,7 @@ namespace ZenTask.WPF.UIConfig
                         new ElementConfig
                         {
                             Type = "TextBlock",
-                            Name = "TxtCompletedTasks",
+                            Name = "TasksCompleted",
                             Content = "0 completed",
                             Foreground = "#9CA3AF",
                             FontSize = 11,
@@ -241,7 +241,17 @@ namespace ZenTask.WPF.UIConfig
                     element = txt;
                     break;
                 case "TextBox":
-                    var textBox = new TextBox { VerticalContentAlignment = VerticalAlignment.Center, Padding = new Thickness(5), BorderThickness = new Thickness(1), BorderBrush = (Brush)new BrushConverter().ConvertFromString("#E5E7EB") };
+                    var textBox = new TextBox
+                    {
+                        VerticalContentAlignment = VerticalAlignment.Center,
+                        Padding = new Thickness(5),
+                        BorderThickness = new Thickness(1),
+                        BorderBrush = (Brush)new BrushConverter().ConvertFromString("#E5E7EB")
+                    };
+                    if (!string.IsNullOrEmpty(config.Background)) 
+                        textBox.Background = (Brush)new BrushConverter().ConvertFromString(config.Background);
+                    if (!string.IsNullOrEmpty(config.Foreground)) 
+                        textBox.Foreground = (Brush)new BrushConverter().ConvertFromString(config.Foreground);
                     element = textBox;
                     break;
                 case "Button":
@@ -283,6 +293,7 @@ namespace ZenTask.WPF.UIConfig
                     if (comboBox.Items.Count > 0) comboBox.SelectedIndex = 0;
                     element = comboBox;
                     break;
+
             }
 
             if (element != null)

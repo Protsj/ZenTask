@@ -3,7 +3,11 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using ZenTask.Core.Models;
+using ZenTask.Core.Services;
 using ZenTask.WPF.UIConfig;
+using System.Collections.Generic;
+using ZenTask.Core.Data;
 
 namespace ZenTask.WPF
 {
@@ -12,10 +16,15 @@ namespace ZenTask.WPF
         private UIBuilder _builder = new UIBuilder();
         private StackPanel _listItemsContainer;
         private List<Grid> _listItemRows = new List<Grid>();
+        
+        private TaskManager _taskManager;
+        private SqliteTaskStorage _taskStorage;
 
-        public AddTaskWindow()
+        public AddTaskWindow(TaskManager taskManager, SqliteTaskStorage taskStorage)
         {
             InitializeComponent();
+            _taskManager = taskManager;
+            _taskStorage = taskStorage;
 
             this.WindowStyle = WindowStyle.None;
             this.ResizeMode = ResizeMode.NoResize;
@@ -274,7 +283,7 @@ namespace ZenTask.WPF
   
             var btnSave = (Button)_builder.BuildElement(new ElementConfig { Type = "Button", Name = "BtnSave", Content = "Add Task", Background = "#F3F4F6", Foreground = "#111827", Width = 130, HorizontalAlignment = "Right" });
 
-            btnSave.Click += (s, ev) =>
+            btnSave.Click += async (s, ev) =>
             {
                 errTitle.Visibility = Visibility.Collapsed;
                 bool hasError = false;
@@ -287,23 +296,27 @@ namespace ZenTask.WPF
 
                 foreach (var pair in fieldsToValidate)
                 {
+                    bool isFieldInvalid = false;
+                    string fieldText = string.Empty;
+
                     if (pair.Value is TextBox tb)
-                    {
-                        bool isFieldInvalid = false;
+                        fieldText = tb.Text;
+                    else if (pair.Value is ComboBox cb && cb.SelectedItem != null)
+                        fieldText = cb.SelectedItem.ToString();
 
-                        if (string.IsNullOrWhiteSpace(tb.Text))
+                    if (string.IsNullOrWhiteSpace(fieldText)) 
+                        isFieldInvalid = true;
+
+                    if (pair.Key == "Duration" && !isFieldInvalid)
+                        if (!int.TryParse(fieldText, out int m) || m <= 0) 
                             isFieldInvalid = true;
-                        if (pair.Key == "Duration" && !isFieldInvalid)
-                            if (!int.TryParse(tb.Text, out int m) || m <= 0)
-                                isFieldInvalid = true;
 
-                        if (isFieldInvalid)
+                    if (isFieldInvalid)
+                    {
+                        if (dynamicErrorBlocks.TryGetValue(pair.Key, out TextBlock errorBlock))
                         {
-                            if (dynamicErrorBlocks.TryGetValue(pair.Key, out TextBlock errorBlock))
-                            {
-                                errorBlock.Visibility = Visibility.Visible;
-                                hasError = true;
-                            }
+                            errorBlock.Visibility = Visibility.Visible;
+                            hasError = true;
                         }
                     }
                 }
@@ -312,10 +325,78 @@ namespace ZenTask.WPF
                 {
                     var firstInput = LogicalTreeHelper.FindLogicalNode(_listItemRows[0], "TxtItemInput") as TextBox;
                     if (firstInput != null && string.IsNullOrWhiteSpace(firstInput.Text))
+                    {
+                        MessageBox.Show("Please, fill in at least one checklist item!", "Validation", MessageBoxButton.OK, MessageBoxImage.Warning);
                         hasError = true;
+                    }
                 }
+
                 if (hasError) return;
-                this.Close();
+
+                try
+                {
+                    string title = txtTitle.Text;
+                    string desc = txtDesc.Text;
+                    BaseTask newTask = null;
+
+                    switch (taskTypeTileName)
+                    {
+                        case "TileHabit":
+                            newTask = new HabitTask(title, desc);
+                            break;
+
+                        case "TileFocus":
+                            int mins = int.Parse(((TextBox)fieldsToValidate["Duration"]).Text);
+                            newTask = new FocusTask(title, TimeSpan.FromMinutes(mins), 1, desc);
+                            break;
+
+                        case "TileUrgent":
+                            DateTime urgentDeadline = ExtractDateTime(formPanel, "Urgent");
+                            newTask = new UrgentTask(title, urgentDeadline, desc);
+                            break;
+
+                        case "TileMeeting":
+                            DateTime meetingTime = ExtractDateTime(formPanel, "Meeting");
+                            newTask = new MeetingTask(title, meetingTime, desc);
+                            break;
+
+                        case "TileCall":
+                            string contact = ((TextBox)fieldsToValidate["Contact"]).Text;
+                            string phone = ((TextBox)fieldsToValidate["Phone"]).Text;
+
+                            string platform = (LogicalTreeHelper.FindLogicalNode(formPanel, "TxtPlatform") as TextBox)?.Text;
+                            if (string.IsNullOrWhiteSpace(platform)) platform = "Phone";
+
+                            DateTime callTime = ExtractDateTime(formPanel, "Call");
+
+                            newTask = new CallTask(title, contact, phone, callTime, platform, desc);
+                            break;
+
+                        case "TileList":
+                            var listTask = new ListTask(title, desc);
+                            foreach (var row in _listItemRows)
+                            {
+                                var input = LogicalTreeHelper.FindLogicalNode(row, "TxtItemInput") as TextBox;
+                                if (input != null && !string.IsNullOrWhiteSpace(input.Text))
+                                {
+                                    listTask.AddItem(input.Text);
+                                }
+                            }
+                            newTask = listTask;
+                            break;
+                    }
+
+                    if (newTask != null)
+                    {
+                        _taskManager.AddTask(newTask);
+                        await _taskStorage.SaveTaskAsync(new List<BaseTask> { newTask });
+                        this.Close();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Error saving database: {ex.Message}", "SQLite Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
             };
 
             buttonsGrid.Children.Add(btnBack);
@@ -393,6 +474,19 @@ namespace ZenTask.WPF
                     if (trashBtn != null) trashBtn.Visibility = Visibility.Visible;
                 }
             }
+        }
+
+        private DateTime ExtractDateTime(DependencyObject rootNode, string prefix)
+        {
+            var dp = LogicalTreeHelper.FindLogicalNode(rootNode, $"{prefix}Date") as DatePicker;
+            var cbHours = LogicalTreeHelper.FindLogicalNode(rootNode, $"{prefix}Hours") as ComboBox;
+            var cbMinutes = LogicalTreeHelper.FindLogicalNode(rootNode, $"{prefix}Minutes") as ComboBox;
+
+            DateTime date = dp?.SelectedDate ?? DateTime.Today;
+            int hours = cbHours?.SelectedItem != null ? int.Parse(cbHours.SelectedItem.ToString()) : 9;
+            int minutes = cbMinutes?.SelectedItem != null ? int.Parse(cbMinutes.SelectedItem.ToString()) : 0;
+
+            return new DateTime(date.Year, date.Month, date.Day, hours, minutes, 0);
         }
     }
 }
