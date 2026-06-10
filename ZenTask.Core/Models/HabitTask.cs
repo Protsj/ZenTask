@@ -6,11 +6,13 @@ namespace ZenTask.Core.Models
     {
         public int Streak { get; private set; }
         public bool IsCompleted { get; private set; }
+        public DateTime LastCompletedDate { get; set; }
         public HabitTask(string title, string description = "") 
             : base(title, description)
         {
             Streak = 0;
             IsCompleted = false;
+            LastCompletedDate = DateTime.Today;
         }
         public void Complete() 
         {
