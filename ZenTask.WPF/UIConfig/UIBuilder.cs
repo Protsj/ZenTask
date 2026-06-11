@@ -208,22 +208,22 @@ namespace ZenTask.WPF.UIConfig
                         VerticalAlignment = "Center",
                         Children = new List<ElementConfig>
                         {
-                            new ElementConfig 
-                            { 
-                                Type = "TextBlock", 
-                                Content = icon, 
-                                FontSize = 32, 
-                                HorizontalAlignment = "Center", 
-                                Margin = "0,0,0,8" 
+                            new ElementConfig
+                            {
+                                Type = "TextBlock",
+                                Content = icon,
+                                FontSize = 34,
+                                HorizontalAlignment = "Center",
+                                Margin = "0,0,0,5"
                             },
 
-                            new ElementConfig 
-                            { 
-                                Type = "TextBlock", 
-                                Content = title, 
-                                FontSize = 13, 
-                                Foreground = "#4B5563", 
-                                HorizontalAlignment = "Center" 
+                            new ElementConfig
+                            {
+                                Type = "TextBlock",
+                                Content = title,
+                                FontSize = 14,
+                                Foreground = "#374151",
+                                HorizontalAlignment = "Center"
                             }
                         }
                     }
@@ -586,63 +586,55 @@ namespace ZenTask.WPF.UIConfig
 
             if (!(task is ListTask))
             {
-                Button btnComplete = new Button
-                {
-                    Content = isCompleted ? "☑" : "☐",
-                    FontSize = 12,
-                    Background = Brushes.Transparent,
-                    BorderThickness = new Thickness(0),
-                    Cursor = System.Windows.Input.Cursors.Hand,
-                    Width = 28,
-                    Height = 28
+                Button btnComplete = new Button 
+                { 
+                    Content = isCompleted ? "☑" : "☐", 
+                    FontSize = 12, 
+                    Width = 28, 
+                    Height = 28 
                 };
 
+                btnComplete.Style = (Style)Application.Current.Resources["IconActionButton"];
                 btnComplete.Click += onCompleteClick;
                 actionsPanel.Children.Add(btnComplete);
             }
 
             Button btnEdit = new Button 
             { 
-                Content = "✏️", FontSize = 12, 
-                Background = Brushes.Transparent, 
-                BorderThickness = new Thickness(0), 
-                Cursor = System.Windows.Input.Cursors.Hand, 
+                Content = "✏️", 
+                FontSize = 12, 
                 Width = 28, 
                 Height = 28 
             };
 
+            btnEdit.Style = (Style)Application.Current.Resources["IconActionButton"];
             btnEdit.Click += onEditClick;
             actionsPanel.Children.Add(btnEdit);
 
-            Button btnExpand = new Button
-            {
-                Content = "▼",
-                FontSize = 14,
-                FontWeight = FontWeights.Bold,
-                Background = Brushes.Transparent,
-                BorderThickness = new Thickness(0),
-                Cursor = System.Windows.Input.Cursors.Hand,
-                Width = 28,
-                Height = 28,
-                Foreground = (Brush)new BrushConverter().ConvertFromString("#4B5563")
+            Button btnDelete = new Button 
+            { 
+                Content = "🗑️", 
+                FontSize = 12, 
+                Width = 28, 
+                Height = 28 
             };
 
-            btnExpand.Click += (s, e) => onToggleExpand(cardBorder, btnExpand);
-            actionsPanel.Children.Add(btnExpand);
+            btnDelete.Style = (Style)Application.Current.Resources["IconActionButton"];
+            btnDelete.Click += onDeleteClick;
+            actionsPanel.Children.Add(btnDelete);
 
-            Button btnDelete = new Button
+            Button btnExpand = new Button
             {
-                Content = "🗑️",
+                Name = "BtnExpand",
+                Content = "▼",
                 FontSize = 12,
-                Background = Brushes.Transparent,
-                BorderThickness = new Thickness(0),
-                Cursor = System.Windows.Input.Cursors.Hand,
                 Width = 28,
                 Height = 28
             };
+            btnExpand.Style = (Style)Application.Current.Resources["IconActionButton"];
 
-            btnDelete.Click += onDeleteClick;
-            actionsPanel.Children.Add(btnDelete);
+            btnExpand.Click += (s, e) => onToggleExpand(cardBorder, btnExpand);
+            actionsPanel.Children.Add(btnExpand);
 
             Grid.SetColumn(actionsPanel, 2);
             topGrid.Children.Add(actionsPanel);
@@ -805,6 +797,11 @@ namespace ZenTask.WPF.UIConfig
             cardBorder.Child = cardLayout;
 
             return cardBorder;
+        }
+
+        private static void BtnEdit_Click(object sender, RoutedEventArgs e)
+        {
+            throw new NotImplementedException();
         }
 
         private static StackPanel CreateDetailLine(string label, string value)

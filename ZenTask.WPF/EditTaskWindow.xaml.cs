@@ -190,20 +190,20 @@ namespace ZenTask.WPF
                 _formPanel.Children.Add(listScrollViewer);
 
                 Button btnAddSubTask = new Button 
+                {
+                    Content = "+ Add item",
+                    HorizontalAlignment = HorizontalAlignment.Left,
+                    Margin = new Thickness(0, 8, 0, 10),
+                    Cursor = Cursors.Hand
+                };
+                btnAddSubTask.Style = (Style)Application.Current.Resources["SecondaryPillButton"];
+
+                btnAddSubTask.Click += (s, e) => 
                 { 
-                    Content = "+ Add item", 
-                    Background = (Brush)new BrushConverter().ConvertFromString("#F3F4F6"), 
-                    Foreground = (Brush)new BrushConverter().ConvertFromString("#4B5563"), 
-                    FontSize = 13, 
-                    FontWeight = FontWeights.Medium, 
-                    Width = 80, 
-                    Height = 32, 
-                    HorizontalAlignment = HorizontalAlignment.Left, 
-                    Margin = new Thickness(0, 8, 0, 10), 
-                    Cursor = Cursors.Hand 
+                    AddListItemRow(""); 
+                    listScrollViewer.ScrollToEnd(); 
                 };
 
-                btnAddSubTask.Click += (s, e) => { AddListItemRow(""); listScrollViewer.ScrollToEnd(); };
                 _formPanel.Children.Add(btnAddSubTask);
             }
 
@@ -213,29 +213,28 @@ namespace ZenTask.WPF
                 Height = 35 
             };
 
-            var btnCancel = (Button)_builder.BuildElement(new ElementConfig 
-            { 
-                Type = "Button", 
-                Name = "BtnCancel", 
-                Content = "Cancel", 
-                Background = "Transparent", 
-                Foreground = "#6B7280", 
-                Width = 80, 
-                HorizontalAlignment = "Left" 
+            var btnCancel = (Button)_builder.BuildElement(new ElementConfig
+            {
+                Type = "Button",
+                Name = "BtnCancel",
+                Content = "Cancel",
+                Width = 80,
+                HorizontalAlignment = "Left"
             });
 
+            btnCancel.Style = (Style)Application.Current.Resources["SecondaryPillButton"];
             btnCancel.Click += (s, ev) => this.Close();
 
-            var btnSave = (Button)_builder.BuildElement(new ElementConfig 
-            { 
-                Type = "Button", 
-                Name = "BtnSave", 
-                Content = "Save Changes", 
-                Background = "#3B82F6", 
-                Foreground = "#FFFFFF", 
-                Width = 130, 
-                HorizontalAlignment = "Right" 
+            var btnSave = (Button)_builder.BuildElement(new ElementConfig
+            {
+                Type = "Button",
+                Name = "BtnSave",
+                Content = "Save Changes",
+                Width = 130,
+                HorizontalAlignment = "Right"
             });
+
+            btnSave.Style = (Style)Application.Current.Resources["PrimaryPillButton"];
 
             btnSave.Click += async (s, ev) =>
             {
@@ -471,18 +470,17 @@ namespace ZenTask.WPF
             Grid.SetColumn(itemInput, 0);
             rowGrid.Children.Add(itemInput);
 
-            Button btnDelete = new Button 
-            { 
-                Name = "BtnDeleteItem", 
-                Content = "🗑️", 
-                Width = 28, 
-                Height = 28, 
-                Background = Brushes.Transparent, 
-                BorderThickness = new Thickness(0), 
-                Cursor = Cursors.Hand, 
-                HorizontalAlignment = HorizontalAlignment.Right 
+            Button btnDelete = new Button
+            {
+                Name = "BtnDeleteItem",
+                Content = "🗑️",
+                Width = 28,
+                Height = 28,
+                Cursor = Cursors.Hand,
+                HorizontalAlignment = HorizontalAlignment.Right,
+                Style = (Style)Application.Current.Resources["IconActionButton"]
             };
-            
+
             btnDelete.Click += (s, e) => { _listItemsContainer.Children.Remove(rowGrid); _listItemRows.Remove(rowGrid); UpdateTrashButtonsVisibility(); };
             Grid.SetColumn(btnDelete, 1);
             rowGrid.Children.Add(btnDelete);

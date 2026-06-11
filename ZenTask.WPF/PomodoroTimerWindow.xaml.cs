@@ -4,6 +4,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Threading;
 using ZenTask.Core.Models;
+using ZenTask.WPF.UICustom;
 
 namespace ZenTask.WPF
 {
@@ -78,19 +79,14 @@ namespace ZenTask.WPF
             Button btnStop = new Button
             {
                 Content = "Stop session",
-                Background = (Brush)new BrushConverter().ConvertFromString("#374151"),
-                Foreground = (Brush)new BrushConverter().ConvertFromString("#F3F4F6"),
-                FontWeight = FontWeights.Medium,
-                FontSize = 12,
-                Height = 35,
-                Width = 160,
-                BorderThickness = new Thickness(0),
                 Cursor = System.Windows.Input.Cursors.Hand
             };
 
+            btnStop.Style = (Style)Application.Current.Resources["SecondaryPillButton"];
+
             btnStop.Click += (s, e) =>
             {
-                var result = MessageBox.Show("Are you sure, you want to stop this session. The progress will be lost.", "Stop Pomodoro", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+                var result = CustomMessageBox.Show("Are you sure, you want to stop this session? The progress will be lost.", "Stop Pomodoro", MessageBoxButton.YesNo);
                 if (result == MessageBoxResult.Yes)
                 {
                     _timer.Stop();
@@ -130,7 +126,7 @@ namespace ZenTask.WPF
         {
             System.Media.SystemSounds.Exclamation.Play();
 
-            MessageBox.Show($"Congratulations! You've successfully completed a {_focusTask.EstimatedDuration.TotalMinutes}-minute focus session on task '{_focusTask.Title}'! One Pomodoro has been added to your streak.", "Time is up! 🍅", MessageBoxButton.OK, MessageBoxImage.Information);
+            CustomMessageBox.Show($"Congratulations! You've successfully completed a {_focusTask.EstimatedDuration.TotalMinutes}-minute focus session on task '{_focusTask.Title}'!\n\nOne Pomodoro has been added to your streak.", "Time is up! 🍅", MessageBoxButton.OK);
 
             var pomoProp = _focusTask.GetType().GetProperty("PomodoroCount") ?? _focusTask.GetType().GetProperty("PomodorosDone") ?? _focusTask.GetType().GetProperty("Count");
             if (pomoProp != null && pomoProp.CanWrite)

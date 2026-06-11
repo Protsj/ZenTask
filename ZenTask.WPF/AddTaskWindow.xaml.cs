@@ -370,18 +370,16 @@ namespace ZenTask.WPF
 
                     Button btnAddSubTask = new Button
                     {
-                        Content = "Add item",
-                        Background = (Brush)new BrushConverter().ConvertFromString("#F3F4F6"),
-                        Foreground = (Brush)new BrushConverter().ConvertFromString("#4B5563"),
-                        FontSize = 13,
-                        Width = 60,
-                        Height = 32,
+                        Content = "+ Add item",
                         HorizontalAlignment = HorizontalAlignment.Left,
                         Margin = new Thickness(0, 8, 0, 10),
                         Cursor = Cursors.Hand
                     };
 
-                    btnAddSubTask.Click += (s, e) => {
+                    btnAddSubTask.Style = (Style)Application.Current.Resources["SecondaryPillButton"];
+
+                    btnAddSubTask.Click += (s, e) => 
+                    {
                         AddListItemRow();
                         listScrollViewer.ScrollToEnd();
                     };
@@ -416,29 +414,28 @@ namespace ZenTask.WPF
                 Height = 35 
             };
 
-            var btnBack = (Button)_builder.BuildElement(new ElementConfig 
-            { 
-                Type = "Button", 
-                Name = "BtnCancel", 
-                Content = "Back", 
-                Background = "Transparent", 
-                Foreground = "#6B7280", 
-                Width = 80, 
-                HorizontalAlignment = "Left" 
+            var btnBack = (Button)_builder.BuildElement(new ElementConfig
+            {
+                Type = "Button",
+                Name = "BtnCancel",
+                Content = "Back",
+                Width = 80,
+                HorizontalAlignment = "Left"
             });
-            
+
+            btnBack.Style = (Style)Application.Current.Resources["SecondaryPillButton"];
             btnBack.Click += (s, ev) => ShowTypeSelectionScreen();
-  
-            var btnSave = (Button)_builder.BuildElement(new ElementConfig 
-            { 
-                Type = "Button", 
-                Name = "BtnSave", 
-                Content = "Add Task", 
-                Background = "#F3F4F6", 
-                Foreground = "#111827", 
-                Width = 130, 
-                HorizontalAlignment = "Right" 
+
+            var btnSave = (Button)_builder.BuildElement(new ElementConfig
+            {
+                Type = "Button",
+                Name = "BtnSave",
+                Content = "Add Task",
+                Width = 130,
+                HorizontalAlignment = "Right"
             });
+
+            btnSave.Style = (Style)Application.Current.Resources["PrimaryPillButton"];
 
             btnSave.Click += async (s, ev) =>
             {
@@ -611,10 +608,9 @@ namespace ZenTask.WPF
                 Content = "🗑",
                 Width = 28,
                 Height = 28,
-                Background = Brushes.Transparent,
-                BorderThickness = new Thickness(0),
                 Cursor = Cursors.Hand,
-                HorizontalAlignment = HorizontalAlignment.Right
+                HorizontalAlignment = HorizontalAlignment.Right,
+                Style = (Style)Application.Current.Resources["IconActionButton"]
             };
 
             btnDelete.Click += (s, e) => {

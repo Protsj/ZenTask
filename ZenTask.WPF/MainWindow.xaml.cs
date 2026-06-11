@@ -79,6 +79,9 @@ namespace ZenTask.WPF
 
                 if (btnAddTask != null)
                 {
+                    btnAddTask.ClearValue(Button.BackgroundProperty);
+                    btnAddTask.ClearValue(Button.ForegroundProperty);
+                    btnAddTask.Style = (Style)Application.Current.Resources["PrimaryPillButton"];
                     btnAddTask.Click += (s, e) =>
                     {
                         var addWindow = new AddTaskWindow(_taskManager, _taskStorage);
@@ -130,6 +133,18 @@ namespace ZenTask.WPF
                     };
 
                     btnBorder.Child = txt;
+
+                    btnBorder.MouseEnter += (s, ev) =>
+                    {
+                        if (_currentFilter != f)
+                            btnBorder.Background = (Brush)new BrushConverter().ConvertFromString("#D1D5DB");
+                    };
+
+                    btnBorder.MouseLeave += (s, ev) =>
+                    {
+                        if (_currentFilter != f)
+                            btnBorder.Background = (Brush)new BrushConverter().ConvertFromString("#F3F4F6");
+                    };
 
                     btnBorder.MouseLeftButtonDown += (s, ev) =>
                     {
@@ -398,6 +413,7 @@ namespace ZenTask.WPF
 
                     if (btnStartPomo != null)
                     {
+                        btnStartPomo.Style = (Style)Application.Current.Resources["PrimaryPillButton"];
                         btnStartPomo.Click += (s, e) =>
                         {
                             PomodoroTimerWindow timerWindow = new PomodoroTimerWindow((FocusTask)task, async () =>
