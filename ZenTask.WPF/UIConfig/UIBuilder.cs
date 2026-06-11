@@ -542,7 +542,7 @@ namespace ZenTask.WPF.UIConfig
             }
             else if (task is UrgentTask urgentTaskFeature)
             {
-                TimeSpan timeLeft = urgentTaskFeature.Deadline - DateTime.Now;
+                TimeSpan timeLeft = urgentTaskFeature.ReminderTime - DateTime.Now;
 
                 if (timeLeft.TotalSeconds < 0)
                 {
@@ -683,7 +683,7 @@ namespace ZenTask.WPF.UIConfig
 
             if (task is UrgentTask urgentTaskDetails)
             {
-                detailsPanel.Children.Add(CreateDetailLine("⏰ Deadline:", urgentTaskDetails.Deadline.ToString("yyyy-MM-dd HH:mm")));
+                detailsPanel.Children.Add(CreateDetailLine("⏰ Deadline:", urgentTaskDetails.ReminderTime.ToString("yyyy-MM-dd HH:mm")));
             }
             else if (task is MeetingTask meetingTaskDetails)
             {
@@ -748,7 +748,11 @@ namespace ZenTask.WPF.UIConfig
                         FontSize = 12,
                         Cursor = System.Windows.Input.Cursors.Hand,
                         Foreground = isItemCompleted ? Brushes.Gray : Brushes.Black,
-                        Content = isItemCompleted ? new TextBlock { Text = itemText, TextDecorations = TextDecorations.Strikethrough } : (object)itemText
+                        Content = isItemCompleted ? new TextBlock 
+                        { 
+                            Text = itemText, 
+                            TextDecorations = TextDecorations.Strikethrough 
+                        } : (object)itemText
                     };
 
                     chkItem.Click += (s, e) =>
@@ -762,14 +766,17 @@ namespace ZenTask.WPF.UIConfig
                         foreach (var childItem in listTaskDetails.Items)
                         {
                             var childStatus = childItem.GetType().GetProperty("IsCompleted") ?? childItem.GetType().GetProperty("IsDone");
+
                             if (childStatus != null && !(bool)childStatus.GetValue(childItem))
                                 allCompleted = false; 
+
                             break;
                         }
 
                         if (task is ICompletable comp)
                         {
                             var parentProp = comp.GetType().GetProperty("IsCompleted");
+
                             if (parentProp != null && parentProp.CanWrite)
                                 parentProp.SetValue(comp, allCompleted);
                         }

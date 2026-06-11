@@ -105,7 +105,7 @@ namespace ZenTask.WPF
                 VerticalContentAlignment = VerticalAlignment.Center 
             };
 
-            for (int i = 0; i < 24; i++) 
+            for (int i = 0; i <= 23; i++) 
                 cboHours.Items.Add(i.ToString("D2"));
 
             cboHours.SelectedIndex = 9;
@@ -120,7 +120,7 @@ namespace ZenTask.WPF
                 VerticalContentAlignment = VerticalAlignment.Center 
             };
 
-            for (int i = 0; i < 60; i += 5) 
+            for (int i = 0; i <= 59; i++) 
                 cboMinutes.Items.Add(i.ToString("D2"));
 
             cboMinutes.SelectedIndex = 0;

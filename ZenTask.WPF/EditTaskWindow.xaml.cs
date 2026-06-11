@@ -93,7 +93,7 @@ namespace ZenTask.WPF
             {
                 _formPanel.Children.Add(CreateLabel("Deadline*"));
                 _formPanel.Children.Add(CreateDateTimePicker("Urgent"));
-                SetDateTimePickerValue("Urgent", urgent.Deadline);
+                SetDateTimePickerValue("Urgent", urgent.ReminderTime);
             }
             else if (_taskToEdit is MeetingTask meeting)
             {
@@ -249,18 +249,31 @@ namespace ZenTask.WPF
                 _taskToEdit.Description = txtDesc.Text.Trim();
 
                 if (_taskToEdit is UrgentTask u)
-                    u.Deadline = ExtractDateTime("Urgent");
+                {
+                    DateTime newDeadline = ExtractDateTime("Urgent");
+                    if (u.ReminderTime != newDeadline)
+                    {
+                        u.ReminderTime = newDeadline;
+                        u.IsReminderSent = false;
+                    }
+                }
                 else if (_taskToEdit is MeetingTask m)
                 {
                     var locNode = LogicalTreeHelper.FindLogicalNode(_formPanel, "TxtLocation") as TextBox;
                     m.Location = locNode?.Text;
-                    m.ReminderTime = ExtractDateTime("Meeting");
+
+                    DateTime newTime = ExtractDateTime("Meeting");
+                    if (m.ReminderTime != newTime)
+                    {
+                        m.ReminderTime = newTime;
+                        m.IsReminderSent = false;
+                    }
                 }
                 else if (_taskToEdit is FocusTask f)
                 {
                     var durNode = LogicalTreeHelper.FindLogicalNode(_formPanel, "TxtDuration") as TextBox;
-                    
-                    if (int.TryParse(durNode?.Text, out int mins)) 
+
+                    if (int.TryParse(durNode?.Text, out int mins))
                         f.EstimatedDuration = TimeSpan.FromMinutes(mins);
                 }
                 else if (_taskToEdit is CallTask c)
@@ -269,7 +282,13 @@ namespace ZenTask.WPF
                     var phoneNode = LogicalTreeHelper.FindLogicalNode(_formPanel, "TxtPhone") as TextBox;
                     c.ContactName = contactNode?.Text;
                     c.PhoneNumber = phoneNode?.Text;
-                    c.ReminderTime = ExtractDateTime("Call");
+
+                    DateTime newTime = ExtractDateTime("Call");
+                    if (c.ReminderTime != newTime)
+                    {
+                        c.ReminderTime = newTime;
+                        c.IsReminderSent = false;
+                    }
                 }
                 else if (_taskToEdit is ListTask l)
                 {
@@ -368,7 +387,7 @@ namespace ZenTask.WPF
                 VerticalContentAlignment = VerticalAlignment.Center 
             };
 
-            for (int i = 0; i < 24; i++) 
+            for (int i = 0; i <= 23; i++) 
                 cboHours.Items.Add(i.ToString("D2"));
             
             timePanel.Children.Add(cboHours);
@@ -382,7 +401,7 @@ namespace ZenTask.WPF
                 VerticalContentAlignment = VerticalAlignment.Center 
             };
             
-            for (int i = 0; i < 60; i += 5) 
+            for (int i = 0; i <= 59; i++) 
                 cboMinutes.Items.Add(i.ToString("D2"));
 
             timePanel.Children.Add(cboMinutes);

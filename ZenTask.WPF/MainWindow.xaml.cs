@@ -9,6 +9,7 @@ using ZenTask.Core.Interfaces;
 using ZenTask.Core.Models;
 using ZenTask.Core.Services;
 using ZenTask.WPF.UIConfig;
+using Microsoft.Toolkit.Uwp.Notifications;
 
 namespace ZenTask.WPF
 {
@@ -22,6 +23,7 @@ namespace ZenTask.WPF
         private Guid? _expandedTaskId = null;
         private Button _currentlyExpandedButton = null;
         private DispatcherTimer _uiUpdateTimer;
+        private HashSet<Guid> _notifiedTasks = new HashSet<Guid>();
 
         public MainWindow()
         {
@@ -29,6 +31,8 @@ namespace ZenTask.WPF
 
             _taskStorage = new SqliteTaskStorage();
             _taskManager = new TaskManager();
+
+            _taskManager.ReminderTriggeredEvent += OnReminderTriggered;
 
             LoadDynamicUI();
             LoadDataFromDatabaseAsync();
@@ -90,10 +94,13 @@ namespace ZenTask.WPF
             try
             {
                 var tasksFromDb = await _taskStorage.LoadTasksAsync();
+
                 foreach (var task in tasksFromDb)
                     _taskManager.AddTask(task);
+
                 AuditHabits();
                 RefreshTasksList();
+                _taskManager.StartReminderMonitor();
             }
             catch (Exception ex)
             {
@@ -114,6 +121,7 @@ namespace ZenTask.WPF
                 if (logicalChild is FrameworkElement fe)
                 {
                     var result = FindElementByName(fe, name);
+
                     if (result != null) 
                         return result;
                 }
@@ -122,6 +130,7 @@ namespace ZenTask.WPF
             if (parent is ContentControl cc && cc.Content is FrameworkElement ccChild)
             {
                 var result = FindElementByName(ccChild, name);
+
                 if (result != null) 
                     return result;
             }
@@ -129,6 +138,7 @@ namespace ZenTask.WPF
             if (parent is Border b && b.Child is FrameworkElement bChild)
             {
                 var result = FindElementByName(bChild, name);
+
                 if (result != null) 
                     return result;
             }
@@ -140,6 +150,7 @@ namespace ZenTask.WPF
                     if (child is FrameworkElement fe)
                     {
                         var result = FindElementByName(fe, name);
+
                         if (result != null) 
                             return result;
                     }
@@ -210,6 +221,7 @@ namespace ZenTask.WPF
                         {
                             bool newState = !completableTask.IsCompleted;
                             var prop = completableTask.GetType().GetProperty("IsCompleted");
+
                             if (prop != null && prop.CanWrite)
                                 prop.SetValue(completableTask, newState);
                         }
@@ -221,6 +233,7 @@ namespace ZenTask.WPF
                             foreach (var childItem in listTask.Items)
                             {
                                 var childStatusProp = childItem.GetType().GetProperty("IsCompleted") ?? childItem.GetType().GetProperty("IsDone");
+
                                 if (childStatusProp != null && childStatusProp.CanWrite)
                                     childStatusProp.SetValue(childItem, isParentCompleted);
                             }
@@ -323,7 +336,9 @@ namespace ZenTask.WPF
             button.Content = "▲";
 
             double availableWidth = parentCard.ActualWidth - 30;
-            if (availableWidth <= 0) availableWidth = double.PositiveInfinity;
+
+            if (availableWidth <= 0) 
+                availableWidth = double.PositiveInfinity;
 
             panel.Measure(new Size(availableWidth, double.PositiveInfinity));
             double targetHeight = panel.DesiredSize.Height;
@@ -379,6 +394,7 @@ namespace ZenTask.WPF
                 if (logicalChild is FrameworkElement fe)
                 {
                     var res = FindExpandButton(fe);
+
                     if (res != null) 
                         return res;
                 }
@@ -412,9 +428,31 @@ namespace ZenTask.WPF
             }
 
             if (needsSave)
-            {
                 await _taskStorage.SaveTaskAsync(_taskManager.GetTasks());
-            }
+        }
+
+        private async void OnReminderTriggered(object sender, TaskEventArgs e)
+        {
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                if (e.IsOverdue)
+                {
+                    new ToastContentBuilder()
+                        .AddText("🚨 Overdue Task!")
+                        .AddText($"Task '{e.Task.Title}' is past due.")
+                        .Show();
+                }
+                else
+                {
+                    new ToastContentBuilder()
+                        .AddText("⏳ Upcoming Task")
+                        .AddText($"'{e.Task.Title}' is due in 15 minutes or less.")
+                        .Show();
+                }
+            });
+
+            if (e.IsOverdue)
+                await _taskStorage.SaveTaskAsync(_taskManager.GetTasks());
         }
     }
 }
