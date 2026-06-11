@@ -23,7 +23,7 @@ namespace ZenTask.Tests.Models
             // Act
             var urgentTask = new UrgentTask("Test Urgent Task", deadline);
             // Assert
-            Assert.Equal(deadline, urgentTask.Deadline);
+            Assert.Equal(deadline, urgentTask.ReminderTime);
         }
 
         [Fact]
