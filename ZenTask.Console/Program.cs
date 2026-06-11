@@ -146,7 +146,7 @@ static void PrintTaskDetails(BaseTask task)
             Console.WriteLine($"Reminder: {meetingtask.ReminderTime:yyyy-MM-dd HH:mm}");
             break;
         case UrgentTask urgenttask:
-            Console.WriteLine($"Deadline: {urgenttask.Deadline:yyyy-MM-dd HH:mm}");
+            Console.WriteLine($"Deadline: {urgenttask.ReminderTime:yyyy-MM-dd HH:mm}");
             break;
     }
 }
