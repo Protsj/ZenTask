@@ -1,6 +1,8 @@
-﻿using System.IO;
+﻿using Microsoft.Toolkit.Uwp.Notifications;
+using System.IO;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Threading;
@@ -9,7 +11,6 @@ using ZenTask.Core.Interfaces;
 using ZenTask.Core.Models;
 using ZenTask.Core.Services;
 using ZenTask.WPF.UIConfig;
-using Microsoft.Toolkit.Uwp.Notifications;
 
 namespace ZenTask.WPF
 {
@@ -23,7 +24,7 @@ namespace ZenTask.WPF
         private Guid? _expandedTaskId = null;
         private Button _currentlyExpandedButton = null;
         private DispatcherTimer _uiUpdateTimer;
-        private HashSet<Guid> _notifiedTasks = new HashSet<Guid>();
+        private string _currentFilter = "All Tasks";
 
         public MainWindow()
         {
@@ -86,6 +87,80 @@ namespace ZenTask.WPF
                         Application.Current.Dispatcher.BeginInvoke(new Action(() => { RefreshTasksList(); }));
                     };
                 }
+
+                ScrollViewer filterScroll = new ScrollViewer
+                {
+                    HorizontalScrollBarVisibility = ScrollBarVisibility.Hidden,
+                    VerticalScrollBarVisibility = ScrollBarVisibility.Disabled,
+                    Margin = new Thickness(15, 0, 15, 0),
+                    VerticalAlignment = VerticalAlignment.Center
+                };
+
+                StackPanel filterPanel = new StackPanel 
+                { 
+                    Orientation = Orientation.Horizontal 
+                };
+
+                filterScroll.Content = filterPanel;
+
+                string[] filters = { "All Tasks", "Call", "Focus", "Habit", "List", "Meeting", "Urgent" };
+                List<Border> filterButtons = new List<Border>();
+
+                foreach (var f in filters)
+                {
+                    bool isActive = f == _currentFilter;
+
+                    Border btnBorder = new Border
+                    {
+                        CornerRadius = new CornerRadius(10),
+                        Padding = new Thickness(12, 6, 12, 6),
+                        Margin = new Thickness(0, 0, 8, 0),
+                        Cursor = Cursors.Hand,
+
+                        Background = (Brush)new BrushConverter().ConvertFromString(isActive ? "#111827" : "#F3F4F6")
+                    };
+
+                    TextBlock txt = new TextBlock
+                    {
+                        Text = f,
+                        FontSize = 13,
+                        FontWeight = isActive ? FontWeights.Bold : FontWeights.Normal,
+                        Foreground = (Brush)new BrushConverter().ConvertFromString(isActive ? "#FFFFFF" : "#4B5563"),
+                        VerticalAlignment = VerticalAlignment.Center
+                    };
+
+                    btnBorder.Child = txt;
+
+                    btnBorder.MouseLeftButtonDown += (s, ev) =>
+                    {
+                        _currentFilter = f;
+
+                        foreach (var b in filterButtons)
+                        {
+                            var t = b.Child as TextBlock;
+                            if (t.Text == _currentFilter)
+                            {
+                                b.Background = (Brush)new BrushConverter().ConvertFromString("#111827");
+                                t.Foreground = Brushes.White;
+                                t.FontWeight = FontWeights.Bold;
+                            }
+                            else
+                            {
+                                b.Background = (Brush)new BrushConverter().ConvertFromString("#F3F4F6");
+                                t.Foreground = (Brush)new BrushConverter().ConvertFromString("#4B5563");
+                                t.FontWeight = FontWeights.Normal;
+                            }
+                        }
+
+                        RefreshTasksList();
+                    };
+
+                    filterButtons.Add(btnBorder);
+                    filterPanel.Children.Add(btnBorder);
+                }
+
+                if (btnAddTask != null && btnAddTask.Parent is Panel parentPanel)
+                    parentPanel.Children.Insert(parentPanel.Children.IndexOf(btnAddTask), filterScroll);
             }
         }
 
@@ -177,7 +252,18 @@ namespace ZenTask.WPF
             if (_tasksCompleted != null) 
                 _tasksCompleted.Text = $"{completedCount} completed";
 
-            foreach (var task in tasks)
+
+            var filteredTasks = tasks.Where(task =>
+                _currentFilter == "All Tasks" ||
+                (_currentFilter == "Call" && task is CallTask) ||
+                (_currentFilter == "Focus" && task is FocusTask) ||
+                (_currentFilter == "Habit" && task is HabitTask) ||
+                (_currentFilter == "List" && task is ListTask) ||
+                (_currentFilter == "Meeting" && task is MeetingTask) ||
+                (_currentFilter == "Urgent" && task is UrgentTask)
+            ).ToList();
+
+            foreach (var task in filteredTasks)
             {
                 var card = UIBuilder.CreateTaskCard(task,
                     onEditClick: (s, e) =>
