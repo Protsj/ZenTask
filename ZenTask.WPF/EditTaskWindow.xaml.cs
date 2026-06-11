@@ -45,7 +45,7 @@ namespace ZenTask.WPF
                 BorderBrush = (Brush)new BrushConverter().ConvertFromString("#E5E7EB"),
                 BorderThickness = new Thickness(1),
                 CornerRadius = new CornerRadius(8),
-                Background = Brushes.White
+                Background = (Brush)new BrushConverter().ConvertFromString("#F9FAFB")
             };
 
             Grid mainLayout = new Grid();
@@ -165,7 +165,7 @@ namespace ZenTask.WPF
                 ScrollViewer listScrollViewer = new ScrollViewer 
                 { 
                     Height = 160, 
-                    VerticalScrollBarVisibility = ScrollBarVisibility.Auto, 
+                    VerticalScrollBarVisibility = ScrollBarVisibility.Hidden, 
                     Margin = new Thickness(0, 2, 0, 5) 
                 };
 
@@ -271,9 +271,32 @@ namespace ZenTask.WPF
                     c.PhoneNumber = phoneNode?.Text;
                     c.ReminderTime = ExtractDateTime("Call");
                 }
+                else if (_taskToEdit is ListTask l)
+                {
+                    var fields = l.GetType().GetFields(System.Reflection.BindingFlags.NonPublic |
+                                                       System.Reflection.BindingFlags.Instance |
+                                                       System.Reflection.BindingFlags.Public);
+
+                    foreach (var field in fields)
+                    {
+                        var val = field.GetValue(l);
+
+                        if (val is System.Collections.IList list && !val.GetType().Name.Contains("ReadOnly"))
+                            list.Clear();
+                    }
+
+                    foreach (var row in _listItemRows)
+                    {
+                        var input = LogicalTreeHelper.FindLogicalNode(row, "TxtItemInput") as TextBox;
+
+                        if (input != null && !string.IsNullOrWhiteSpace(input.Text))
+                            l.AddItem(input.Text.Trim());
+                    }
+                }
 
                 try
                 {
+                    await _taskStorage.DeleteTaskAsync(_taskToEdit.Id);
                     await _taskStorage.SaveTaskAsync(_taskManager.GetTasks());
                     this.Close();
                 }

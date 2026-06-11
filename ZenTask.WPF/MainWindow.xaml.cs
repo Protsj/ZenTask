@@ -6,6 +6,7 @@ using System.Windows.Media.Animation;
 using System.Windows.Threading;
 using ZenTask.Core.Data;
 using ZenTask.Core.Interfaces;
+using ZenTask.Core.Models;
 using ZenTask.Core.Services;
 using ZenTask.WPF.UIConfig;
 
@@ -59,6 +60,13 @@ namespace ZenTask.WPF
                 this.Content = rootUI;
 
                 _tasksContainer = FindElementByName(rootUI, "TasksContainer") as StackPanel;
+
+                if (_tasksContainer != null && _tasksContainer.Parent is ScrollViewer scroll)
+                {
+                    scroll.VerticalScrollBarVisibility = ScrollBarVisibility.Hidden;
+                    scroll.Margin = new Thickness(scroll.Margin.Left, 50, scroll.Margin.Right, 30);
+                }
+
                 _tasksTotal = FindElementByName(rootUI, "TasksTotal") as TextBlock;
                 _tasksCompleted = FindElementByName(rootUI, "TasksCompleted") as TextBlock;
 
@@ -84,6 +92,7 @@ namespace ZenTask.WPF
                 var tasksFromDb = await _taskStorage.LoadTasksAsync();
                 foreach (var task in tasksFromDb)
                     _taskManager.AddTask(task);
+                AuditHabits();
                 RefreshTasksList();
             }
             catch (Exception ex)
@@ -187,15 +196,38 @@ namespace ZenTask.WPF
                     },
                     onCompleteClick: async (s, e) =>
                     {
-                        if (task is ICompletable completableTask)
+                        if (task is HabitTask habit)
                         {
-                            if (completableTask.IsCompleted)
-                                completableTask.UndoComplete();
+                            if (habit.IsCompleted)
+                                habit.UndoComplete();
                             else
-                                completableTask.Complete();
-                            await _taskStorage.SaveTaskAsync(_taskManager.GetTasks());
-                            RefreshTasksList();
+                            {
+                                habit.Complete();
+                                habit.LastCompletedDate = DateTime.Today;
+                            }
                         }
+                        else if (task is ICompletable completableTask)
+                        {
+                            bool newState = !completableTask.IsCompleted;
+                            var prop = completableTask.GetType().GetProperty("IsCompleted");
+                            if (prop != null && prop.CanWrite)
+                                prop.SetValue(completableTask, newState);
+                        }
+
+                        if (task is ListTask listTask)
+                        {
+                            bool isParentCompleted = (task as ICompletable)?.IsCompleted ?? false;
+
+                            foreach (var childItem in listTask.Items)
+                            {
+                                var childStatusProp = childItem.GetType().GetProperty("IsCompleted") ?? childItem.GetType().GetProperty("IsDone");
+                                if (childStatusProp != null && childStatusProp.CanWrite)
+                                    childStatusProp.SetValue(childItem, isParentCompleted);
+                            }
+                        }
+
+                        await _taskStorage.SaveTaskAsync(_taskManager.GetTasks());
+                        RefreshTasksList();
                     },
                     onToggleExpand: (cardBorder, btnExpand) =>
                     {
@@ -236,6 +268,7 @@ namespace ZenTask.WPF
                         await _taskStorage.SaveTaskAsync(_taskManager.GetTasks());
                         RefreshTasksList();
                     }
+
                 );
                 if (_expandedTaskId == task.Id)
                 {
@@ -259,7 +292,26 @@ namespace ZenTask.WPF
                         }
                     }
                 }
+                if (task is FocusTask)
+                {
+                    string btnPomoName = $"BtnStartPomo_{task.Id.ToString().Replace("-", "_")}";
+                    Button btnStartPomo = FindElementByName((FrameworkElement)card, btnPomoName) as Button;
 
+                    if (btnStartPomo != null)
+                    {
+                        btnStartPomo.Click += (s, e) =>
+                        {
+                            PomodoroTimerWindow timerWindow = new PomodoroTimerWindow((FocusTask)task, async () =>
+                            {
+                                await _taskStorage.SaveTaskAsync(_taskManager.GetTasks());
+                                RefreshTasksList();
+                            });
+
+                            timerWindow.Owner = this;
+                            timerWindow.ShowDialog();
+                        };
+                    }
+                }
                 _tasksContainer.Children.Add(card);
             }
             _tasksContainer.UpdateLayout();
@@ -333,6 +385,36 @@ namespace ZenTask.WPF
             }
 
             return null;
+        }
+
+        private async void AuditHabits()
+        {
+            bool needsSave = false;
+            var today = DateTime.Today;
+
+            foreach (var task in _taskManager.GetTasks().OfType<HabitTask>())
+            {
+                var lastCompleted = task.LastCompletedDate.Date;
+                if (task.IsCompleted && lastCompleted < today)
+                {
+                    task.ResetCycle();
+                    needsSave = true;
+                }
+
+                if (!task.IsCompleted && lastCompleted < today.AddDays(-1))
+                {
+                    if (task.Streak > 0)
+                    {
+                        task.ResetCycle();
+                        needsSave = true;
+                    }
+                }
+            }
+
+            if (needsSave)
+            {
+                await _taskStorage.SaveTaskAsync(_taskManager.GetTasks());
+            }
         }
     }
 }

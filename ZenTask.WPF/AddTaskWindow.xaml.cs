@@ -143,8 +143,8 @@ namespace ZenTask.WPF
             string jsonPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "add_task_window.json");
             var windowConfig = _builder.LoadAddWindowConfig(jsonPath);
 
-            this.Width = windowConfig.Width;
-            this.Height = windowConfig.Height;
+            this.Width = 420;
+            this.Height = 500;
 
             Border windowBorder = new Border
             {
@@ -155,9 +155,25 @@ namespace ZenTask.WPF
             };
 
             Grid mainLayout = new Grid();
+
+            TextBlock txtWindowHeader = new TextBlock
+            {
+                Text = "New Task",
+                FontSize = 18,
+                FontWeight = FontWeights.Bold,
+                Foreground = (Brush)new BrushConverter().ConvertFromString("#111827"),
+                Margin = new Thickness(30, 25, 0, 0),
+                HorizontalAlignment = HorizontalAlignment.Left,
+                VerticalAlignment = VerticalAlignment.Top
+            };
+
+            mainLayout.Children.Add(txtWindowHeader);
+
             var rootUi = _builder.BuildElement(windowConfig.RootElement);
 
-            mainLayout.Children.Add(rootUi);
+            if (rootUi != null)
+                mainLayout.Children.Add(rootUi);
+
             mainLayout.Children.Add(CreateFloatingCloseButton());
 
             windowBorder.Child = mainLayout;
@@ -173,6 +189,21 @@ namespace ZenTask.WPF
                 {
                     tile.Cursor = Cursors.Hand;
                     tile.MouseDown += Tile_MouseDown;
+
+                    Brush originalBorder = tile.BorderBrush;
+                    Brush originalBackground = tile.Background;
+
+                    tile.MouseEnter += (s, e) =>
+                    {
+                        tile.BorderBrush = (Brush)new BrushConverter().ConvertFromString("#3B82F6");
+                        tile.Background = (Brush)new BrushConverter().ConvertFromString("#E8E8E8");
+                    };
+
+                    tile.MouseLeave += (s, e) =>
+                    {
+                        tile.BorderBrush = originalBorder;
+                        tile.Background = originalBackground;
+                    };
                 }
             }
         }
@@ -189,7 +220,7 @@ namespace ZenTask.WPF
                 BorderBrush = (Brush)new BrushConverter().ConvertFromString("#E5E7EB"),
                 BorderThickness = new Thickness(1),
                 CornerRadius = new CornerRadius(8),
-                Background = Brushes.White
+                Background = (Brush)new BrushConverter().ConvertFromString("#F9FAFB")
             };
 
             Grid mainLayout = new Grid();
@@ -325,7 +356,7 @@ namespace ZenTask.WPF
                     ScrollViewer listScrollViewer = new ScrollViewer 
                     { 
                         Height = 160, 
-                        VerticalScrollBarVisibility = ScrollBarVisibility.Auto, 
+                        VerticalScrollBarVisibility = ScrollBarVisibility.Hidden, 
                         Margin = new Thickness(0, 2, 0, 5) 
                     };
 
@@ -475,7 +506,7 @@ namespace ZenTask.WPF
 
                         case "TileFocus":
                             int mins = int.Parse(((TextBox)fieldsToValidate["Duration"]).Text);
-                            newTask = new FocusTask(title, TimeSpan.FromMinutes(mins), 1, description);
+                            newTask = new FocusTask(title, TimeSpan.FromMinutes(mins), 0, description);
                             break;
 
                         case "TileUrgent":

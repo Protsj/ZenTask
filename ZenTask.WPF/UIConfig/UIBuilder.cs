@@ -559,6 +559,15 @@ namespace ZenTask.WPF.UIConfig
                 }
                 hasFeature = true;
             }
+            else if (task is FocusTask focusTaskFeature)
+            {
+                var pomoProp = focusTaskFeature.GetType().GetProperty("PomodoroCount") ?? focusTaskFeature.GetType().GetProperty("PomodorosDone") ?? focusTaskFeature.GetType().GetProperty("Count");
+                int pomoCount = pomoProp != null ? (int)pomoProp.GetValue(focusTaskFeature) : 0;
+
+                txtFeature.Text = $"🍅 {pomoCount} pomodoros done";
+                txtFeature.Foreground = (Brush)new BrushConverter().ConvertFromString("#EF4444");
+                hasFeature = true;
+            }
 
             if (hasFeature)
                 typeAndFeaturePanel.Children.Add(txtFeature);
@@ -568,21 +577,29 @@ namespace ZenTask.WPF.UIConfig
             Grid.SetColumn(textPanel, 1);
             topGrid.Children.Add(textPanel);
 
-            StackPanel actionsPanel = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Center };
-
-            Button btnComplete = new Button
-            {
-                Content = isCompleted ? "☑" : "☐",
-                FontSize = 12, 
-                Background = Brushes.Transparent,
-                BorderThickness = new Thickness(0),
-                Cursor = System.Windows.Input.Cursors.Hand,
-                Width = 28,
-                Height = 28
+            StackPanel actionsPanel = new StackPanel 
+            { 
+                Orientation = Orientation.Horizontal, 
+                HorizontalAlignment = HorizontalAlignment.Right, 
+                VerticalAlignment = VerticalAlignment.Center 
             };
 
-            btnComplete.Click += onCompleteClick;
-            actionsPanel.Children.Add(btnComplete);
+            if (!(task is ListTask))
+            {
+                Button btnComplete = new Button
+                {
+                    Content = isCompleted ? "☑" : "☐",
+                    FontSize = 12,
+                    Background = Brushes.Transparent,
+                    BorderThickness = new Thickness(0),
+                    Cursor = System.Windows.Input.Cursors.Hand,
+                    Width = 28,
+                    Height = 28
+                };
+
+                btnComplete.Click += onCompleteClick;
+                actionsPanel.Children.Add(btnComplete);
+            }
 
             Button btnEdit = new Button 
             { 
@@ -632,19 +649,36 @@ namespace ZenTask.WPF.UIConfig
 
             cardLayout.Children.Add(topGrid);
 
-            StackPanel detailsPanel = new StackPanel { Name = "DetailsPanel", Margin = new Thickness(40, 10, 0, 0), Visibility = Visibility.Collapsed };
+            StackPanel detailsPanel = new StackPanel 
+            { 
+                Name = "DetailsPanel", 
+                Margin = new Thickness(40, 10, 0, 0), 
+                Visibility = Visibility.Collapsed 
+            };
 
             if (!string.IsNullOrWhiteSpace(task.Description))
             {
-                detailsPanel.Children.Add(new TextBlock
+                TextBlock txtDescBlock = new TextBlock
                 {
-                    Text = $"📄 Description: {task.Description}",
                     FontSize = 12,
-                    FontStyle = FontStyles.Italic,
                     Foreground = (Brush)new BrushConverter().ConvertFromString("#4B5563"),
                     Margin = new Thickness(0, 0, 0, 8),
                     TextWrapping = TextWrapping.Wrap
+                };
+
+                txtDescBlock.Inlines.Add(new System.Windows.Documents.Run
+                {
+                    Text = "📄 Description: ",
+                    FontWeight = FontWeights.Bold
                 });
+
+                txtDescBlock.Inlines.Add(new System.Windows.Documents.Run
+                {
+                    Text = task.Description,
+                    FontWeight = FontWeights.Normal
+                });
+
+                detailsPanel.Children.Add(txtDescBlock);
             }
 
             if (task is UrgentTask urgentTaskDetails)
@@ -667,7 +701,29 @@ namespace ZenTask.WPF.UIConfig
             }
             else if (task is FocusTask focusTaskDetails)
             {
-                detailsPanel.Children.Add(CreateDetailLine("⏱️ Duration:", $"{focusTaskDetails.EstimatedDuration.TotalMinutes} minutes"));
+                var pomoProp = focusTaskDetails.GetType().GetProperty("PomodoroCount") ?? focusTaskDetails.GetType().GetProperty("PomodorosDone") ?? focusTaskDetails.GetType().GetProperty("Count");
+                int pomoCount = pomoProp != null ? (int)pomoProp.GetValue(focusTaskDetails) : 0;
+
+                detailsPanel.Children.Add(CreateDetailLine("⏱️ Estimated duration:", $"{focusTaskDetails.EstimatedDuration.TotalMinutes} mins"));
+                detailsPanel.Children.Add(CreateDetailLine("🍅 Sessions ended:", $"{pomoCount} pomodoros"));
+
+                if (!isCompleted)
+                {
+                    Button btnStartPomo = new Button
+                    {
+                        Content = "▶ Start focus session",
+                        Background = (Brush)new BrushConverter().ConvertFromString("#EF4444"),
+                        Foreground = Brushes.White,
+                        FontWeight = FontWeights.Medium,
+                        FontSize = 12,
+                        Height = 30,
+                        Margin = new Thickness(0, 10, 0, 5),
+                        Cursor = System.Windows.Input.Cursors.Hand
+                    };
+
+                    btnStartPomo.Name = $"BtnStartPomo_{task.Id.ToString().Replace("-", "_")}";
+                    detailsPanel.Children.Add(btnStartPomo);
+                }
             }
             else if (task is ListTask listTaskDetails)
             {
