@@ -2,15 +2,15 @@
 
 namespace ZenTask.Core.Models
 {
-    public class UrgentTask : BaseTask, ICompletable
+    public class UrgentTask : BaseTask, ICompletable, IRemindable
     {
-        public DateTime Deadline { get; set; }
+        public DateTime ReminderTime { get; set; }
         public bool IsCompleted { get; private set; }
         public bool IsReminderSent { get; set; }
-        public UrgentTask(string title, DateTime deadline, string description = "") 
+        public UrgentTask(string title, DateTime reminderTime, string description = "") 
             : base(title, description)
         {
-            Deadline = deadline;
+            ReminderTime = reminderTime;
             IsCompleted = false;
             IsReminderSent = false;
         }
