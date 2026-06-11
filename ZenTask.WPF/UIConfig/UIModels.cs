@@ -1,4 +1,6 @@
-﻿namespace ZenTask.WPF.UIConfig
+﻿using System.Windows;
+
+namespace ZenTask.WPF.UIConfig
 {
     public class WindowConfig
     {
@@ -14,6 +16,7 @@
         public string Type { get; set; }
         public string Name { get; set; }
         public string Content { get; set; }
+        public string Style { get; set; }
         public string Background { get; set; }
         public string Foreground { get; set; }
         public double FontSize { get; set; }

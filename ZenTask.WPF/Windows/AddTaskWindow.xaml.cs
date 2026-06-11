@@ -20,7 +20,6 @@ namespace ZenTask.WPF
 
         public AddTaskWindow(TaskManager taskManager, SqliteTaskStorage taskStorage)
         {
-            InitializeComponent();
             _taskManager = taskManager;
             _taskStorage = taskStorage;
 
@@ -30,6 +29,7 @@ namespace ZenTask.WPF
             this.Background = Brushes.Transparent;
             this.WindowStartupLocation = WindowStartupLocation.CenterOwner;
 
+            InitializeComponent();
             ShowTypeSelectionScreen();
         }
 
@@ -376,8 +376,6 @@ namespace ZenTask.WPF
                         Cursor = Cursors.Hand
                     };
 
-                    btnAddSubTask.Style = (Style)Application.Current.Resources["SecondaryPillButton"];
-
                     btnAddSubTask.Click += (s, e) => 
                     {
                         AddListItemRow();
@@ -419,11 +417,11 @@ namespace ZenTask.WPF
                 Type = "Button",
                 Name = "BtnCancel",
                 Content = "Back",
+                Style = "SecondaryPillButton",
                 Width = 80,
                 HorizontalAlignment = "Left"
             });
 
-            btnBack.Style = (Style)Application.Current.Resources["SecondaryPillButton"];
             btnBack.Click += (s, ev) => ShowTypeSelectionScreen();
 
             var btnSave = (Button)_builder.BuildElement(new ElementConfig
@@ -431,11 +429,10 @@ namespace ZenTask.WPF
                 Type = "Button",
                 Name = "BtnSave",
                 Content = "Add Task",
+                Style = "PrimaryPillButton",
                 Width = 130,
                 HorizontalAlignment = "Right"
             });
-
-            btnSave.Style = (Style)Application.Current.Resources["PrimaryPillButton"];
 
             btnSave.Click += async (s, ev) =>
             {

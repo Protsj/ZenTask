@@ -61,8 +61,7 @@ namespace ZenTask.WPF.UIConfig
                             Type = "Button",
                             Name = "BtnAddTask",
                             Content = "+ New Task",
-                            Background = "#F3F4F6",
-                            Foreground = "#4B5563",
+                            Style = "PrimaryPillButton",
                             FontSize = 13,
                             Width = 100,
                             Height = 30,
@@ -378,6 +377,13 @@ namespace ZenTask.WPF.UIConfig
             {
                 if (!string.IsNullOrEmpty(config.Name)) 
                     element.Name = config.Name;
+
+                if (!string.IsNullOrEmpty(config.Style))
+                {
+                    var style = Application.Current.TryFindResource(config.Style) as Style;
+                    if (style != null)
+                        element.Style = style;
+                }
 
                 if (config.Width > 0) 
                     element.Width = config.Width;

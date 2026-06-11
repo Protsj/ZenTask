@@ -218,11 +218,11 @@ namespace ZenTask.WPF
                 Type = "Button",
                 Name = "BtnCancel",
                 Content = "Cancel",
+                Style = "SecondaryPillButton",
                 Width = 80,
                 HorizontalAlignment = "Left"
             });
 
-            btnCancel.Style = (Style)Application.Current.Resources["SecondaryPillButton"];
             btnCancel.Click += (s, ev) => this.Close();
 
             var btnSave = (Button)_builder.BuildElement(new ElementConfig
@@ -230,11 +230,10 @@ namespace ZenTask.WPF
                 Type = "Button",
                 Name = "BtnSave",
                 Content = "Save Changes",
+                Style = "PrimaryPillButton",
                 Width = 130,
                 HorizontalAlignment = "Right"
             });
-
-            btnSave.Style = (Style)Application.Current.Resources["PrimaryPillButton"];
 
             btnSave.Click += async (s, ev) =>
             {
