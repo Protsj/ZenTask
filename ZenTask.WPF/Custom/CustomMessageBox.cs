@@ -27,7 +27,7 @@ namespace ZenTask.WPF.UICustom
         {
             Border mainBorder = new Border
             {
-                Background = (Brush)new BrushConverter().ConvertFromString("#1F2937"), // Темний фон, як у Pomodoro
+                Background = (Brush)new BrushConverter().ConvertFromString("#1F2937"),
                 BorderBrush = (Brush)new BrushConverter().ConvertFromString("#374151"),
                 BorderThickness = new Thickness(1),
                 CornerRadius = new CornerRadius(12),

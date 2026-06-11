@@ -254,17 +254,17 @@ namespace ZenTask.WPF
         {
             if (_tasksContainer == null)
                 return;
-                
+
             _tasksContainer.Children.Clear();
             _currentlyExpandedButton = null;
             var tasks = _taskManager.GetTasks();
             int totalCount = tasks.Count;
             int completedCount = tasks.Count(t => t is ICompletable c && c.IsCompleted);
 
-            if (_tasksTotal != null) 
+            if (_tasksTotal != null)
                 _tasksTotal.Text = $"{totalCount} tasks";
 
-            if (_tasksCompleted != null) 
+            if (_tasksCompleted != null)
                 _tasksCompleted.Text = $"{completedCount} completed";
 
 
@@ -278,158 +278,195 @@ namespace ZenTask.WPF
                 (_currentFilter == "Urgent" && task is UrgentTask)
             ).ToList();
 
-            foreach (var task in filteredTasks)
+            if (filteredTasks.Count == 0)
             {
-                var card = UIBuilder.CreateTaskCard(task,
-                    onEditClick: (s, e) =>
-                    {
-                        var editWindow = new EditTaskWindow(_taskManager, _taskStorage, task);
-                        editWindow.Owner = this;
-                        editWindow.ShowDialog();
-                        Application.Current.Dispatcher.BeginInvoke(new Action(() => { RefreshTasksList(); }));
-                    },
-                    onDeleteClick: async (s, e) =>
-                    {
-                        var result = MessageBox.Show($"Are you sure you want to delete '{task.Title}'?", "Confirmation", MessageBoxButton.YesNo, MessageBoxImage.Question);
-                        
-                        if (result == MessageBoxResult.Yes)
-                        {
-                            try
-                            {
-                                _taskManager.RemoveTask(task.Id);
-                                await _taskStorage.DeleteTaskAsync(task.Id);
-                                RefreshTasksList();
-                            }
-                            catch (Exception ex)
-                            {
-                                MessageBox.Show($"Error deleting task: {ex.Message}");
-                            }
-                        }
-                    },
-                    onCompleteClick: async (s, e) =>
-                    {
-                        if (task is HabitTask habit)
-                        {
-                            if (habit.IsCompleted)
-                                habit.UndoComplete();
-                            else
-                            {
-                                habit.Complete();
-                                habit.LastCompletedDate = DateTime.Today;
-                            }
-                        }
-                        else if (task is ICompletable completableTask)
-                        {
-                            bool newState = !completableTask.IsCompleted;
-                            var prop = completableTask.GetType().GetProperty("IsCompleted");
+                StackPanel emptyStatePanel = new StackPanel
+                {
+                    VerticalAlignment = VerticalAlignment.Center,
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    Margin = new Thickness(0, 60, 0, 0)
+                };
 
-                            if (prop != null && prop.CanWrite)
-                                prop.SetValue(completableTask, newState);
-                        }
+                TextBlock iconBlock = new TextBlock
+                {
+                    Text = "✨",
+                    FontSize = 48,
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    Margin = new Thickness(0, 0, 0, 15)
+                };
 
-                        if (task is ListTask listTask)
+                TextBlock messageBlock = new TextBlock
+                {
+                    Text = _currentFilter == "All Tasks"
+                        ? "You have no tasks yet. Time to chill or add a new one! ✨"
+                        : $"No {_currentFilter} tasks found. You're all caught up! 🎉",
+                    FontSize = 14,
+                    FontWeight = FontWeights.Medium,
+                    Foreground = (Brush)new BrushConverter().ConvertFromString("#9CA3AF"),
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    TextAlignment = TextAlignment.Center,
+                    TextWrapping = TextWrapping.Wrap
+                };
+
+                emptyStatePanel.Children.Add(iconBlock);
+                emptyStatePanel.Children.Add(messageBlock);
+                _tasksContainer.Children.Add(emptyStatePanel);
+            }
+            else
+            {
+                foreach (var task in filteredTasks)
+                {
+                    var card = UIBuilder.CreateTaskCard(task,
+                        onEditClick: (s, e) =>
                         {
-                            bool isParentCompleted = (task as ICompletable)?.IsCompleted ?? false;
+                            var editWindow = new EditTaskWindow(_taskManager, _taskStorage, task);
+                            editWindow.Owner = this;
+                            editWindow.ShowDialog();
+                            Application.Current.Dispatcher.BeginInvoke(new Action(() => { RefreshTasksList(); }));
+                        },
+                        onDeleteClick: async (s, e) =>
+                        {
+                            var result = MessageBox.Show($"Are you sure you want to delete '{task.Title}'?", "Confirmation", MessageBoxButton.YesNo, MessageBoxImage.Question);
 
-                            foreach (var childItem in listTask.Items)
+                            if (result == MessageBoxResult.Yes)
                             {
-                                var childStatusProp = childItem.GetType().GetProperty("IsCompleted") ?? childItem.GetType().GetProperty("IsDone");
-
-                                if (childStatusProp != null && childStatusProp.CanWrite)
-                                    childStatusProp.SetValue(childItem, isParentCompleted);
-                            }
-                        }
-
-                        await _taskStorage.SaveTaskAsync(_taskManager.GetTasks());
-                        RefreshTasksList();
-                    },
-                    onToggleExpand: (cardBorder, btnExpand) =>
-                    {
-                        var panel = FindElementByName(cardBorder, "DetailsPanel") as StackPanel;
-                        
-                        if (panel == null) 
-                            return;
-                        
-                        if (_expandedTaskId == task.Id)
-                        {
-                            AnimateCollapse(panel, btnExpand);
-                            _expandedTaskId = null;
-                            _currentlyExpandedButton = null;
-                        }
-                        else
-                        {
-                            if (_expandedTaskId != null)
-                            {
-                                string oldCardName = $"Card_{_expandedTaskId.Value.ToString().Replace("-", "_")}";
-                                var oldCard = FindElementByName(_tasksContainer, oldCardName) as Border;
-                                
-                                if (oldCard != null)
+                                try
                                 {
-                                    var oldPanel = FindElementByName(oldCard, "DetailsPanel") as StackPanel;
-                                    
-                                    if (oldPanel != null && _currentlyExpandedButton != null)
-                                        AnimateCollapse(oldPanel, _currentlyExpandedButton);
+                                    _taskManager.RemoveTask(task.Id);
+                                    await _taskStorage.DeleteTaskAsync(task.Id);
+                                    RefreshTasksList();
+                                }
+                                catch (Exception ex)
+                                {
+                                    MessageBox.Show($"Error deleting task: {ex.Message}");
+                                }
+                            }
+                        },
+                        onCompleteClick: async (s, e) =>
+                        {
+                            if (task is HabitTask habit)
+                            {
+                                if (habit.IsCompleted)
+                                    habit.UndoComplete();
+                                else
+                                {
+                                    habit.Complete();
+                                    habit.LastCompletedDate = DateTime.Today;
+                                }
+                            }
+                            else if (task is ICompletable completableTask)
+                            {
+                                bool newState = !completableTask.IsCompleted;
+                                var prop = completableTask.GetType().GetProperty("IsCompleted");
+
+                                if (prop != null && prop.CanWrite)
+                                    prop.SetValue(completableTask, newState);
+                            }
+
+                            if (task is ListTask listTask)
+                            {
+                                bool isParentCompleted = (task as ICompletable)?.IsCompleted ?? false;
+
+                                foreach (var childItem in listTask.Items)
+                                {
+                                    var childStatusProp = childItem.GetType().GetProperty("IsCompleted") ?? childItem.GetType().GetProperty("IsDone");
+
+                                    if (childStatusProp != null && childStatusProp.CanWrite)
+                                        childStatusProp.SetValue(childItem, isParentCompleted);
                                 }
                             }
 
-                            AnimateExpand(panel, btnExpand, cardBorder);
-                            _expandedTaskId = task.Id;
-                            _currentlyExpandedButton = btnExpand;
-                        }
-                    },
-                    onSubTaskChanged: async () =>
-                    {
-                        await _taskStorage.SaveTaskAsync(_taskManager.GetTasks());
-                        RefreshTasksList();
-                    }
-
-                );
-                if (_expandedTaskId == task.Id)
-                {
-                    if (card is FrameworkElement cardElement)
-                    {
-                        if (FindElementByName(cardElement, "DetailsPanel") is StackPanel panel)
+                            await _taskStorage.SaveTaskAsync(_taskManager.GetTasks());
+                            RefreshTasksList();
+                        },
+                        onToggleExpand: (cardBorder, btnExpand) =>
                         {
-                            var btnExpand = FindElementByName(cardElement, "BtnExpand") as Button ?? cardElement.FindName("BtnExpand") as Button;
-                            
-                            if (btnExpand == null)
-                                btnExpand = FindExpandButton(cardElement);
+                            var panel = FindElementByName(cardBorder, "DetailsPanel") as StackPanel;
 
-                            panel.Visibility = Visibility.Visible;
-                            panel.Height = double.NaN;
+                            if (panel == null)
+                                return;
 
-                            if (btnExpand != null)
+                            if (_expandedTaskId == task.Id)
                             {
-                                btnExpand.Content = "▲";
+                                AnimateCollapse(panel, btnExpand);
+                                _expandedTaskId = null;
+                                _currentlyExpandedButton = null;
+                            }
+                            else
+                            {
+                                if (_expandedTaskId != null)
+                                {
+                                    string oldCardName = $"Card_{_expandedTaskId.Value.ToString().Replace("-", "_")}";
+                                    var oldCard = FindElementByName(_tasksContainer, oldCardName) as Border;
+
+                                    if (oldCard != null)
+                                    {
+                                        var oldPanel = FindElementByName(oldCard, "DetailsPanel") as StackPanel;
+
+                                        if (oldPanel != null && _currentlyExpandedButton != null)
+                                            AnimateCollapse(oldPanel, _currentlyExpandedButton);
+                                    }
+                                }
+
+                                AnimateExpand(panel, btnExpand, cardBorder);
+                                _expandedTaskId = task.Id;
                                 _currentlyExpandedButton = btnExpand;
+                            }
+                        },
+                        onSubTaskChanged: async () =>
+                        {
+                            await _taskStorage.SaveTaskAsync(_taskManager.GetTasks());
+                            RefreshTasksList();
+                        }
+
+                    );
+                    if (_expandedTaskId == task.Id)
+                    {
+                        if (card is FrameworkElement cardElement)
+                        {
+                            if (FindElementByName(cardElement, "DetailsPanel") is StackPanel panel)
+                            {
+                                var btnExpand = FindElementByName(cardElement, "BtnExpand") as Button ?? cardElement.FindName("BtnExpand") as Button;
+
+                                if (btnExpand == null)
+                                    btnExpand = FindExpandButton(cardElement);
+
+                                panel.Visibility = Visibility.Visible;
+                                panel.Height = double.NaN;
+
+                                if (btnExpand != null)
+                                {
+                                    btnExpand.Content = "▲";
+                                    _currentlyExpandedButton = btnExpand;
+                                }
                             }
                         }
                     }
-                }
-                if (task is FocusTask)
-                {
-                    string btnPomoName = $"BtnStartPomo_{task.Id.ToString().Replace("-", "_")}";
-                    Button btnStartPomo = FindElementByName((FrameworkElement)card, btnPomoName) as Button;
-
-                    if (btnStartPomo != null)
+                    if (task is FocusTask)
                     {
-                        btnStartPomo.Style = (Style)Application.Current.Resources["PrimaryPillButton"];
-                        btnStartPomo.Click += (s, e) =>
-                        {
-                            PomodoroTimerWindow timerWindow = new PomodoroTimerWindow((FocusTask)task, async () =>
-                            {
-                                await _taskStorage.SaveTaskAsync(_taskManager.GetTasks());
-                                RefreshTasksList();
-                            });
+                        string btnPomoName = $"BtnStartPomo_{task.Id.ToString().Replace("-", "_")}";
+                        Button btnStartPomo = FindElementByName((FrameworkElement)card, btnPomoName) as Button;
 
-                            timerWindow.Owner = this;
-                            timerWindow.ShowDialog();
-                        };
+                        if (btnStartPomo != null)
+                        {
+                            btnStartPomo.Style = (Style)Application.Current.Resources["PrimaryPillButton"];
+                            btnStartPomo.Click += (s, e) =>
+                            {
+                                PomodoroTimerWindow timerWindow = new PomodoroTimerWindow((FocusTask)task, async () =>
+                                {
+                                    await _taskStorage.SaveTaskAsync(_taskManager.GetTasks());
+                                    RefreshTasksList();
+                                });
+
+                                timerWindow.Owner = this;
+                                timerWindow.ShowDialog();
+                            };
+                        }
                     }
+                    _tasksContainer.Children.Add(card);
                 }
-                _tasksContainer.Children.Add(card);
+                _tasksContainer.UpdateLayout();
             }
-            _tasksContainer.UpdateLayout();
         }
 
         private void AnimateExpand(StackPanel panel, Button button, Border parentCard)

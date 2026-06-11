@@ -48,7 +48,6 @@ namespace ZenTask.WPF.UIConfig
                     VerticalAlignment = "Top"
                 },
 
-                // Upper panel with title and add button
                 new ElementConfig
                 {
                     Type = "Grid",
@@ -80,7 +79,6 @@ namespace ZenTask.WPF.UIConfig
                     Margin = "0,40,0,0"
                 },
 
-                // Main panel with task list
                 new ElementConfig
                 {
                     Type = "ScrollViewer",
@@ -108,7 +106,6 @@ namespace ZenTask.WPF.UIConfig
                     Margin = "0,0,0,25"
                 },
 
-                // Bottom panel with task counts
                 new ElementConfig
                 {
                     Type = "Grid",
